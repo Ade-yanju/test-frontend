@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "start": "serve dist -s",
+    "start": "node server.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -14,8 +14,7 @@
   },
   "dependencies": {
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "serve": "^14.2.6"
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

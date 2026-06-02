@@ -2,8 +2,20 @@ const http = require('http')
 const fs   = require('fs')
 const path = require('path')
 
-const PORT = process.env.PORT || 5173
+const PORT = parseInt(process.env.PORT || '5173', 10)
 const DIST = path.join(__dirname, 'dist')
+
+console.log('=== Static server starting ===')
+console.log('PORT:', PORT)
+console.log('DIST:', DIST)
+console.log('dist exists:', fs.existsSync(DIST))
+console.log('Node version:', process.version)
+
+if (!fs.existsSync(DIST)) {
+  console.error('ERROR: dist/ directory not found at', DIST)
+  console.error('Files in __dirname:', fs.readdirSync(__dirname).join(', '))
+  process.exit(1)
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -19,17 +31,15 @@ const MIME = {
 }
 
 const server = http.createServer((req, res) => {
-  // Strip query string
   const url = req.url.split('?')[0]
   let filePath = path.join(DIST, url === '/' ? 'index.html' : url)
 
-  // SPA fallback — any unknown path serves index.html
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     filePath = path.join(DIST, 'index.html')
   }
 
-  const ext = path.extname(filePath)
-  const contentType = MIME[ext] || 'application/octet-stream'
+  const ext  = path.extname(filePath)
+  const mime = MIME[ext] || 'application/octet-stream'
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -37,11 +47,14 @@ const server = http.createServer((req, res) => {
       res.end('Not found')
       return
     }
-    res.writeHead(200, { 'Content-Type': contentType })
+    res.writeHead(200, {
+      'Content-Type': mime,
+      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000',
+    })
     res.end(data)
   })
 })
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Frontend server running on port ${PORT}`)
+  console.log(`Frontend server running on http://0.0.0.0:${PORT}`)
 })
